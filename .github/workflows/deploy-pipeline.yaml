@@ -1,0 +1,59 @@
+name: deploy-pipeline
+run-name: ${{ github.repository }} deploy pipeline
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: Environment to deploy
+        options: 
+        - dev
+      destroy:
+        type: boolean
+        description: Destroy Terraform
+        default: false
+
+jobs:
+  deploy:
+    name: 'Terraform'
+    env:
+      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      TF_INPUT: false
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REPO_NAME: ${{ github.event.repository.name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.7.4
+
+      - name: Terraform Init
+        run: |
+          terraform init -backend-config="key=${{ env.REPO_NAME }}-${{ env.ENVIRONMENT }}.tfstate"
+
+      - name: Terraform Validate
+        run: |
+          terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan -out=plan.out -var-file="tfvars/${{ env.ENVIRONMENT }}.tfvars"
+
+      - name: Terraform Apply
+        if: github.event.inputs.destroy == 'false'
+        run: |
+          terraform apply -auto-approve plan.out
+
+      - name: Terraform Destroy
+        if: github.event.inputs.destroy == 'true'
+        run: |
+          terraform destroy -auto-approve plan.out
+
+        
+
