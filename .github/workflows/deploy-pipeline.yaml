@@ -76,7 +76,7 @@ jobs:
       - name: Create Kubernetes Secret
         run: |
             kubectl create secret docker-registry package-registry-secret \
-            --docker-server=docker.pkg.github.com \
+            --docker-server=ghcr.io \
             --docker-username=sladebutler \
             --docker-password=${{ env.GITHUB_CONTAINER_TOKEN }} \
             --docker-email=sladebutler@integration.works 
