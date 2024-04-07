@@ -1,0 +1,72 @@
+name: deploy-pipeline
+run-name: ${{ github.repository }} deploy pipeline
+on:
+  schedule:
+    - cron: '30 13 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: Environment to deploy
+        options: 
+        - dev
+        default: dev
+      destroy:
+        type: boolean
+        description: Destroy Terraform
+        default: false
+
+jobs:
+  deploy:
+    name: 'Deploy ${{ github.event.inputs.environment }}'
+    env:
+      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      DESTROY: ${{ github.event.inputs.destroy }}
+      TF_INPUT: false
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REPO_NAME: ${{ github.event.repository.name }}
+      GITHUB_CONTAINER_TOKEN: ${{ secrets.IW_GITHUB_CONTAINER_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set the variables
+        env:
+          DEFAULT_ENV: 'dev'
+        run: |
+          echo "ENVIRONMENT=${{ github.event.inputs.environment || env.DEFAULT_ENV }}" >> $GITHUB_ENV
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "DESTROY=true" >> $GITHUB_ENV
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.7.4
+
+      - name: Terraform Init
+        run: |
+          terraform init -backend-config="key=${{ env.REPO_NAME }}-${{ env.ENVIRONMENT }}.tfstate"
+
+      - name: Terraform Validate
+        run: |
+          terraform validate
+
+      - name: Terraform Plan
+        if: github.event.inputs.destroy == 'false'
+        id: plan
+        run: |
+          terraform plan -out=plan.out -var-file="tfvars/${{ env.ENVIRONMENT }}.tfvars"
+
+      - name: Terraform Apply
+        if: github.event.inputs.destroy == 'false'
+        run: |
+          terraform apply -auto-approve plan.out
+
+      - name: Terraform Destroy
+        if: github.event.inputs.destroy == 'true' || ${{ env.DESTROY }} == 'true'
+        run: |
+          terraform destroy -auto-approve -var-file="tfvars/${{ env.ENVIRONMENT }}.tfvars"
