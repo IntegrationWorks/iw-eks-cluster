@@ -70,6 +70,8 @@ jobs:
         if: github.event.inputs.destroy == 'true'  || ${{ env.DESTROY }} == 'true'
         run: |
           ls
+          echo ${{ github.event.inputs.destroy }}
+          echo ${{ env.DESTROY }}
         # terraform destroy -auto-approve -var-file="tfvars/${{ env.ENVIRONMENT }}.tfvars"
 
       - name: Configure AWS credentials
@@ -92,6 +94,7 @@ jobs:
 
       - name: Create Docker Registry Secret
         run: |
+          kubectl get secret github-token || \
           kubectl create secret docker-registry github-token \
             --docker-server=ghcr.io \
             --docker-username=sladebutler \
