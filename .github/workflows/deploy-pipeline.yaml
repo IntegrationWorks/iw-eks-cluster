@@ -65,7 +65,7 @@ jobs:
           terraform apply -auto-approve plan.out
 
       - name: Terraform Destroy
-        if: env.IS_SCHEDULED == 'true'
+        if: github.event.inputs.destroy == 'true' || env.IS_SCHEDULED == 'true'
         run: |
           echo "github.event.inputs.destroy = ${{ github.event.inputs.destroy }}"
           echo "env.DESTROY = ${{ env.DESTROY }}"
