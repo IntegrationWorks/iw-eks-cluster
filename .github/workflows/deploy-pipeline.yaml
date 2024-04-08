@@ -69,8 +69,8 @@ jobs:
       - name: Terraform Destroy
         if: github.event.inputs.destroy == 'true' || ${{ env.DESTROY }} == 'true'
         run: |
-          echo ${{ github.event.inputs.destroy }}
-          echo ${{ env.DESTROY }}
+          echo "github.event.inputs.destroy = ${{ github.event.inputs.destroy }}"
+          echo "env.DESTROY = ${{ env.DESTROY }}"
         # terraform destroy -auto-approve -var-file="tfvars/${{ env.ENVIRONMENT }}.tfvars"
 
       - name: Configure AWS credentials
