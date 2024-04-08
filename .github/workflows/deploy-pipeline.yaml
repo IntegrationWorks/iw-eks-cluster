@@ -67,8 +67,7 @@ jobs:
           terraform apply -auto-approve plan.out
 
       - name: Terraform Destroy
-        if: github.event.inputs.destroy == 'true'
-        #  ${{ env.DESTROY }} == 'true'
+        if: github.event.inputs.destroy == 'true' || ${{ env.DESTROY }} == 'true'
         run: |
           echo ${{ github.event.inputs.destroy }}
           echo ${{ env.DESTROY }}
