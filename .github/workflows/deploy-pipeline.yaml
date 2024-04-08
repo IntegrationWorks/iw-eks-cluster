@@ -67,7 +67,8 @@ jobs:
           terraform apply -auto-approve plan.out
 
       - name: Terraform Destroy
-        if: ${{ github.event.inputs.destroy }} == 'true' || ${{ env.DESTROY }} == 'true'
+        if: github.event.inputs.destroy == 'true'
+        #  ${{ env.DESTROY }} == 'true'
         run: |
           echo ${{ github.event.inputs.destroy }}
           echo ${{ env.DESTROY }}
@@ -92,6 +93,7 @@ jobs:
           version: 'v1.29.0'
 
       - name: Create Docker Registry Secret
+        if: github.event.inputs.destroy == 'false'
         run: |
           kubectl get secret github-token || \
           kubectl create secret docker-registry github-token \
