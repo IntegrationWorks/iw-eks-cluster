@@ -38,9 +38,7 @@ jobs:
           DEFAULT_ENV: 'dev'
         run: |
           echo "ENVIRONMENT=${{ github.event.inputs.environment || env.DEFAULT_ENV }}" >> $GITHUB_ENV
-          if [[ "${{ github.event_name }}" == "schedule" ]]; then
-            echo "DESTROY=true" >> $GITHUB_ENV
-          fi
+          echo "IS_SCHEDULED=${{ github.event_name == 'schedule' }}" >> $GITHUB_ENV
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -67,7 +65,7 @@ jobs:
           terraform apply -auto-approve plan.out
 
       - name: Terraform Destroy
-        if: ${{ env.DESTROY }} == 'false'
+        if: env.IS_SCHEDULED == 'true'
         run: |
           echo "github.event.inputs.destroy = ${{ github.event.inputs.destroy }}"
           echo "env.DESTROY = ${{ env.DESTROY }}"
