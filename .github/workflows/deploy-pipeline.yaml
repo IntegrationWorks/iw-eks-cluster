@@ -67,6 +67,33 @@ jobs:
           terraform apply -auto-approve plan.out
 
       - name: Terraform Destroy
-        if: github.event.inputs.destroy == 'true' # || ${{ env.DESTROY }} == 'true'
+        if: github.event.inputs.destroy == 'true'  || ${{ env.DESTROY }} == 'true'
         run: |
-          terraform destroy -auto-approve -var-file="tfvars/${{ env.ENVIRONMENT }}.tfvars"
+
+
+        # terraform destroy -auto-approve -var-file="tfvars/${{ env.ENVIRONMENT }}.tfvars"
+
+      - name: Configure AWS credentials
+        if: github.event.inputs.destroy == 'false'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-2
+
+      - name: Update kube config
+        if: github.event.inputs.destroy == 'false'
+        run: aws eks update-kubeconfig --name iw-eks-cluster --region ap-southeast-2
+
+      - name: Set up Kubectl
+        if: github.event.inputs.destroy == 'false'
+        uses: azure/setup-kubectl@v1
+        with:
+          version: 'v1.29.0'
+
+      - name: Create Docker Registry Secret
+        run: |
+          kubectl create secret docker-registry github-token \
+            --docker-server=ghcr.io \
+            --docker-username=sladebutler \
+            --docker-password=${{ env.GITHUB_CONTAINER_TOKEN }} 
