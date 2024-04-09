@@ -78,7 +78,7 @@ jobs:
 
       - name: Update kube config
         if: github.event.inputs.destroy == 'false'
-        run: aws eks update-kubeconfig --name iw-eks-cluster --region ap-southeast-2
+        run: aws eks update-kubeconfig --name ${{ github.event.repository.name }} --region ap-southeast-2
 
       - name: Set up Kubectl
         if: github.event.inputs.destroy == 'false'
