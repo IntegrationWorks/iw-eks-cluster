@@ -2,7 +2,7 @@ name: deploy-pipeline
 run-name: ${{ github.repository }} deploy pipeline
 on:
   schedule:
-    - cron: '00 5 * * *' #***THIS WILL DELETE YOUR CLUSTER AT 11:30 PM NZT***
+    - cron: '00 6 * * *' #***THIS WILL DELETE YOUR CLUSTER AT 11:30 PM NZT***
   workflow_dispatch:
     inputs:
       environment:
